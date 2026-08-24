@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>vMix Audio Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>vMix Audio Console</h1>
+    <div id="status" class="status status--offline">Conectando…</div>
+  </header>
+
+  <template id="dbScaleTemplate">
+    <div class="vumeter__scale">
+      <span style="left:33.3%">-40</span>
+      <span style="left:66.7%">-20</span>
+      <span style="left:83.3%">-10</span>
+      <span style="left:90%">-6</span>
+      <span style="left:95%">-3</span>
+      <span style="left:100%">0</span>
+    </div>
+  </template>
+
+  <section id="metersBar" class="meters-bar">
+    <div class="vumeter">
+      <div class="vumeter__label">Master</div>
+      <div class="vumeter__stack">
+        <div class="vumeter__bars">
+          <div class="vumeter__bar"><div id="masterMeterL" class="vumeter__fill"></div></div>
+          <div class="vumeter__bar"><div id="masterMeterR" class="vumeter__fill"></div></div>
+        </div>
+        <div id="masterScale"></div>
+      </div>
+    </div>
+    <div class="vumeter">
+      <div id="selectedMeterLabel" class="vumeter__label vumeter__label--dim">Tocá un canal</div>
+      <div class="vumeter__stack">
+        <div class="vumeter__bars">
+          <div class="vumeter__bar"><div id="selectedMeterL" class="vumeter__fill"></div></div>
+          <div class="vumeter__bar"><div id="selectedMeterR" class="vumeter__fill"></div></div>
+        </div>
+        <div id="selectedScale"></div>
+      </div>
+    </div>
+    <div class="meter-style-picker">
+      <button class="meter-style-btn" data-style="continuous" title="Barra continua">▬</button>
+      <button class="meter-style-btn" data-style="led" title="Segmentos LED">▤</button>
+      <button class="meter-style-btn" data-style="blocks" title="Bloques">▥</button>
+    </div>
+  </section>
+
+  <nav id="serverBar" class="server-bar">
+    <div id="serverPills" class="server-pills"></div>
+    <button id="addServerBtn" class="server-settings-btn" title="Agregar servidor vMix">⚙</button>
+  </nav>
+
+  <div id="addServerForm" class="add-server-form" hidden>
+    <div id="addServerFormTitle" class="add-server-form__title">Agregar servidor vMix</div>
+    <input type="text" id="newServerName" placeholder="Nombre (ej: Estudio 2)" />
+    <input type="text" id="newServerHost" placeholder="IP o host (ej: 192.168.1.50)" />
+    <input type="number" id="newServerPort" placeholder="Puerto" value="8099" />
+    <div class="add-server-form__actions">
+      <button id="cancelServerBtn" class="btn-secondary">Cancelar</button>
+      <button id="saveServerBtn" class="btn-primary">Guardar</button>
+    </div>
+  </div>
+
+  <template id="serverPillTemplate">
+    <button class="pill">
+      <span class="pill__dot"></span>
+      <span class="pill__name"></span>
+      <span class="pill__edit" title="Editar servidor">✎</span>
+      <span class="pill__remove" title="Quitar servidor">×</span>
+    </button>
+  </template>
+
+  <nav id="tabsBar" class="tabs">
+    <button class="tab tab--active" data-tab="all">Todos</button>
+    <button id="profilesBtn" class="tabs__profiles-btn" title="Selecciones guardadas">🗂</button>
+  </nav>
+
+  <div id="profilesPanel" class="profiles-panel" hidden>
+    <div class="profiles-panel__title">Selecciones guardadas</div>
+    <div id="profilesList" class="profiles-list"></div>
+    <div class="profiles-panel__save">
+      <input type="text" id="newProfileName" placeholder="Nombre (ej: Paso a paso)" />
+      <button id="saveProfileBtn" class="btn-primary">Guardar selección actual</button>
+    </div>
+  </div>
+
+  <template id="profileRowTemplate">
+    <div class="profile-row">
+      <button class="profile-row__load"></button>
+      <span class="profile-row__remove" title="Borrar">×</span>
+    </div>
+  </template>
+
+  <main class="panel">
+    <div id="disconnectBanner" class="disconnect-banner" hidden>
+      ⚠ Este servidor vMix no responde ahora mismo — se reconecta solo.
+    </div>
+    <section id="busList" class="rowlist rowlist--buses"></section>
+    <div class="divider"></div>
+    <section id="inputList" class="rowlist rowlist--inputs"></section>
+    <p id="emptyCategory" class="empty-msg" hidden>
+      No tenés ninguna entrada elegida de este tipo. Andá a la pestaña "Todos"
+      y tildá el cuadrito de las entradas que querés ver.
+    </p>
+  </main>
+
+  <template id="rowTemplate">
+    <div class="row">
+      <div class="row__tally"></div>
+      <input type="checkbox" class="row__check" hidden />
+      <div class="row__badge"></div>
+      <div class="row__icon">🔊</div>
+      <div class="row__title">
+        <div class="row__name"></div>
+        <div class="row__number"></div>
+      </div>
+      <button class="row__auto" title="Auto (activa el audio solo al pasar a aire)">⇄</button>
+      <div class="row__buses"></div>
+      <button class="row__mute" title="Mute">🔊</button>
+      <button class="row__pct" title="Ajustar volumen">100%</button>
+      <button class="row__solo" title="Solo">S</button>
+    </div>
+  </template>
+
+  <div id="popover" class="popover" hidden>
+    <div class="popover__row">
+      <span class="popover__icon">🔈</span>
+      <input type="range" id="popVolume" class="popover__slider" min="0" max="100" value="100" />
+      <span class="popover__icon">🔊</span>
+      <span id="popVolumeValue" class="popover__value">100%</span>
+    </div>
+    <div class="popover__row popover__row--gain" id="popGainRow">
+      <span class="popover__label">Gain</span>
+      <input type="range" id="popGain" class="popover__slider" min="0" max="24" step="1" value="0" />
+      <span id="popGainValue" class="popover__value">0 dB</span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+services:
+  vmix-audio-console:
+    build: .
+    container_name: vmix-audio-console
+    restart: unless-stopped
+    ports:
+      - "3099:3099"
+    environment:
+      - WEB_HOST=0.0.0.0
+      - WEB_PORT=3099
+      - SERVERS_FILE=/app/data/servers.json
+    volumes:
+      - ./data:/app/data
