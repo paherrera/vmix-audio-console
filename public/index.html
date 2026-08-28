@@ -9,8 +9,29 @@
 <body>
   <header class="topbar">
     <h1>vMix Audio Console</h1>
-    <div id="status" class="status status--offline">Conectando…</div>
+    <div class="topbar__right">
+      <div id="status" class="status status--offline">Conectando…</div>
+      <button id="accountBtn" class="account-btn" title="Cuenta">🔒</button>
+    </div>
   </header>
+
+  <div id="accountPanel" class="account-panel" hidden>
+    <div class="account-panel__title">Cuenta</div>
+    <div class="account-panel__user">Conectado como <b id="accountUserLabel">admin</b></div>
+
+    <div class="account-panel__section">
+      <label>Contraseña actual</label>
+      <input type="password" id="curPassword" autocomplete="current-password" />
+      <label>Usuario nuevo (opcional)</label>
+      <input type="text" id="newUser" autocomplete="username" />
+      <label>Contraseña nueva</label>
+      <input type="password" id="newPassword" autocomplete="new-password" />
+      <button id="changePasswordBtn" class="btn-primary">Cambiar contraseña</button>
+      <div class="account-panel__error" id="accountError"></div>
+    </div>
+
+    <button id="logoutBtn" class="btn-secondary account-panel__logout">Cerrar sesión</button>
+  </div>
 
   <template id="dbScaleTemplate">
     <div class="vumeter__scale">

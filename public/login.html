@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Ingresar - vMix Audio Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #17191d;
+    --panel: #1c1f24;
+    --row: #202329;
+    --border: #2c3037;
+    --text: #e6e8ec;
+    --text-dim: #8a8f9b;
+    --accent: #3ddc84;
+    --red: #ff5252;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .card {
+    width: 320px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 26px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  }
+  h1 {
+    font-size: 18px;
+    margin: 0 0 4px;
+    text-align: center;
+  }
+  .hint {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+    margin: 0 0 22px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 14px 0 6px;
+  }
+  input {
+    width: 100%;
+    background: var(--row);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+  button {
+    width: 100%;
+    margin-top: 22px;
+    background: var(--accent);
+    color: #0a1a10;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .error {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--red);
+    text-align: center;
+    min-height: 16px;
+  }
+</style>
+</head>
+<body>
+  <form class="card" id="loginForm">
+    <h1>vMix Audio Console</h1>
+    <p class="hint">Usuario y contraseña por defecto: admin / admin</p>
+    <label for="user">Usuario</label>
+    <input type="text" id="user" autocomplete="username" autofocus />
+    <label for="pass">Contraseña</label>
+    <input type="password" id="pass" autocomplete="current-password" />
+    <button type="submit" id="submitBtn">Ingresar</button>
+    <div class="error" id="errorMsg"></div>
+  </form>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const userEl = document.getElementById('user');
+    const passEl = document.getElementById('pass');
+    const errorEl = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      errorEl.textContent = '';
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: userEl.value, pass: passEl.value }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          location.href = '/';
+        } else {
+          errorEl.textContent = data.error || 'No se pudo ingresar.';
+        }
+      } catch {
+        errorEl.textContent = 'No se pudo conectar con el servidor.';
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -9,5 +9,6 @@ services:
       - WEB_HOST=0.0.0.0
       - WEB_PORT=3099
       - SERVERS_FILE=/app/data/servers.json
+      - AUTH_FILE=/app/data/auth.json
     volumes:
       - ./data:/app/data

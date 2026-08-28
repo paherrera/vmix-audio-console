@@ -33,6 +33,83 @@ body {
 }
 .topbar h1 { font-size: 17px; margin: 0; font-weight: 600; }
 
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-btn {
+  background: var(--row);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 14px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.account-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.account-panel {
+  position: fixed;
+  top: 66px;
+  right: 20px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  background: #24272e;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  width: 260px;
+}
+.account-panel[hidden] { display: none; }
+.account-panel__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.account-panel__user {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.account-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.account-panel__section label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.account-panel__section input {
+  background: var(--row);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  width: 100%;
+}
+.account-panel__section .btn-primary { margin-top: 10px; }
+.account-panel__error {
+  font-size: 12px;
+  color: var(--red);
+  min-height: 14px;
+}
+.account-panel__logout {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 2px;
+}
+
 .status {
   font-size: 12px;
   padding: 4px 12px;

@@ -1,5 +1,6 @@
 node_modules
 servers.json
+auth.json
 .git
 .gitignore
 data

@@ -24,6 +24,16 @@ const profileRowTemplate = document.getElementById('profileRowTemplate');
 const newProfileName = document.getElementById('newProfileName');
 const saveProfileBtn = document.getElementById('saveProfileBtn');
 
+const accountBtn = document.getElementById('accountBtn');
+const accountPanel = document.getElementById('accountPanel');
+const accountUserLabel = document.getElementById('accountUserLabel');
+const curPassword = document.getElementById('curPassword');
+const newUser = document.getElementById('newUser');
+const newPassword = document.getElementById('newPassword');
+const changePasswordBtn = document.getElementById('changePasswordBtn');
+const accountError = document.getElementById('accountError');
+const logoutBtn = document.getElementById('logoutBtn');
+
 const masterMeterL = document.getElementById('masterMeterL');
 const masterMeterR = document.getElementById('masterMeterR');
 const selectedMeterLabel = document.getElementById('selectedMeterLabel');
@@ -263,6 +273,7 @@ profilesBtn.addEventListener('click', () => {
   }
   renderProfilesList();
   addServerForm.hidden = true;
+  accountPanel.hidden = true;
   profilesPanel.hidden = false;
 });
 
@@ -286,6 +297,74 @@ document.addEventListener('click', (ev) => {
   if (profilesPanel.hidden) return;
   if (profilesPanel.contains(ev.target) || ev.target === profilesBtn) return;
   profilesPanel.hidden = true;
+});
+
+// --- Cuenta (login / cambiar contraseña) --------------------------------
+
+fetch('/api/me')
+  .then((r) => r.json())
+  .then((data) => {
+    if (data.ok) accountUserLabel.textContent = data.user;
+    else location.href = '/login.html';
+  })
+  .catch(() => {});
+
+accountBtn.addEventListener('click', () => {
+  if (!accountPanel.hidden) {
+    accountPanel.hidden = true;
+    return;
+  }
+  accountError.textContent = '';
+  curPassword.value = '';
+  newUser.value = '';
+  newPassword.value = '';
+  addServerForm.hidden = true;
+  profilesPanel.hidden = true;
+  accountPanel.hidden = false;
+});
+
+document.addEventListener('click', (ev) => {
+  if (accountPanel.hidden) return;
+  if (accountPanel.contains(ev.target) || ev.target === accountBtn) return;
+  accountPanel.hidden = true;
+});
+
+changePasswordBtn.addEventListener('click', async () => {
+  accountError.textContent = '';
+  accountError.style.color = '';
+  try {
+    const res = await fetch('/api/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        currentPassword: curPassword.value,
+        newUser: newUser.value.trim(),
+        newPassword: newPassword.value,
+      }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      accountError.textContent = data.error || 'No se pudo cambiar la contraseña.';
+      return;
+    }
+    accountUserLabel.textContent = newUser.value.trim() || accountUserLabel.textContent;
+    curPassword.value = '';
+    newUser.value = '';
+    newPassword.value = '';
+    accountError.style.color = 'var(--accent)';
+    accountError.textContent = 'Contraseña actualizada.';
+  } catch {
+    accountError.textContent = 'No se pudo conectar con el servidor.';
+  }
+});
+
+logoutBtn.addEventListener('click', async () => {
+  try {
+    await fetch('/api/logout', { method: 'POST' });
+  } catch {
+    // igual redirige aunque falle el pedido
+  }
+  location.href = '/login.html';
 });
 
 // --- Servidores vMix ----------------------------------------------------
@@ -410,6 +489,7 @@ addServerBtn.addEventListener('click', () => {
   addServerFormTitle.textContent = 'Agregar servidor vMix';
   saveServerBtn.textContent = 'Guardar';
   profilesPanel.hidden = true;
+  accountPanel.hidden = true;
   addServerForm.hidden = false;
   newServerName.focus();
 });

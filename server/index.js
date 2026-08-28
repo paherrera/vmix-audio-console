@@ -1,7 +1,9 @@
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const ServerManager = require('./serverManager');
+const auth = require('./authManager');
 
 const WEB_PORT = parseInt(process.env.WEB_PORT || '3099', 10);
 // Por defecto solo escucha en esta misma maquina: nadie mas en la red
@@ -12,7 +14,94 @@ const WEB_HOST = process.env.WEB_HOST || '127.0.0.1';
 const manager = new ServerManager();
 manager.start();
 
+// --- Sesiones (login con pantalla propia, no el cartel del navegador) ---
+//
+// Token opaco en una cookie httpOnly, guardado en memoria del servidor.
+// Se pierde si el proceso reinicia (hay que loguearse de nuevo), que para
+// esta herramienta es un compromiso razonable a cambio de no sumar
+// dependencias extra.
+
+const sessions = new Set();
+const SESSION_COOKIE = 'vmix_session';
+
+function parseCookies(header) {
+  const out = {};
+  if (!header) return out;
+  for (const part of header.split(';')) {
+    const idx = part.indexOf('=');
+    if (idx === -1) continue;
+    out[part.slice(0, idx).trim()] = decodeURIComponent(part.slice(idx + 1).trim());
+  }
+  return out;
+}
+
+function getSessionToken(req) {
+  return parseCookies(req.headers.cookie)[SESSION_COOKIE];
+}
+
+function isAuthenticated(req) {
+  const token = getSessionToken(req);
+  return !!token && sessions.has(token);
+}
+
+function requireAuth(req, res, next) {
+  if (isAuthenticated(req)) return next();
+  res.status(401).json({ ok: false, error: 'No autenticado' });
+}
+
 const app = express();
+app.use(express.json());
+
+app.post('/api/login', (req, res) => {
+  const { user, pass } = req.body || {};
+  if (!auth.verify(user, pass)) {
+    res.status(401).json({ ok: false, error: 'Usuario o contraseña incorrectos.' });
+    return;
+  }
+  const token = crypto.randomBytes(24).toString('hex');
+  sessions.add(token);
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=2592000`);
+  res.json({ ok: true, user: auth.getUser() });
+});
+
+app.post('/api/logout', (req, res) => {
+  const token = getSessionToken(req);
+  if (token) sessions.delete(token);
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0`);
+  res.json({ ok: true });
+});
+
+app.get('/api/me', (req, res) => {
+  if (!isAuthenticated(req)) {
+    res.status(401).json({ ok: false });
+    return;
+  }
+  res.json({ ok: true, user: auth.getUser() });
+});
+
+app.post('/api/change-password', requireAuth, (req, res) => {
+  const { currentPassword, newUser, newPassword } = req.body || {};
+  const result = auth.changeCredentials(currentPassword, newUser, newPassword);
+  if (!result.ok) {
+    res.status(400).json(result);
+    return;
+  }
+  res.json(result);
+});
+
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
+});
+
+app.use((req, res, next) => {
+  if (isAuthenticated(req)) return next();
+  if (req.path.startsWith('/api/')) {
+    res.status(401).json({ ok: false, error: 'No autenticado' });
+    return;
+  }
+  res.redirect('/login.html');
+});
+
 app.use(
   express.static(path.join(__dirname, '..', 'public'), {
     etag: false,
@@ -30,7 +119,12 @@ const server = app.listen(WEB_PORT, WEB_HOST, () => {
   }
 });
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({
+  server,
+  verifyClient: ({ req }, callback) => {
+    callback(isAuthenticated(req));
+  },
+});
 
 function broadcast(obj) {
   const msg = JSON.stringify(obj);
